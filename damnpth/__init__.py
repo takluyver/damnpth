@@ -1,9 +1,13 @@
+"""Forcibly fix .pth files made by setuptools
+"""
 import ast
 import astcheck
 import inspect
 import os
 import sys
 from pathlib import Path
+
+__version__ = "0.1"
 
 ### Danger zone
 from setuptools.command import easy_install
@@ -32,7 +36,14 @@ def pth_doctor():
             pass
 
         for pth_file in d.glob('*.pth'):
-            rewrite_pth(pth_file)
+            if pth_file.name.endswith('-nspkg.pth'):
+                # Skip namespace package .pth files for now
+                continue
+
+            try:
+                rewrite_pth(pth_file)
+            except PermissionError:
+                print("Don't have permission to rewrite", pth_file)
 
 def immunise_setuptools():
     ei_file = easy_install.__file__
